@@ -1253,6 +1253,13 @@ local Tab = {
     Rate = Window:AddTab({ Title = "Rating", Icon = "star" })
 	}
 
+Fluent:Notify({
+        Title = "Parry Doesnt Work?",
+        Content = "Change Curve Methods!",
+        SubContent = "", -- Optional
+        Duration = 15 -- Set to nil to make the notification not disappear
+})
+
 -- Webhook URL (replace with your actual webhook URL)
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1357557327158575245/MWKjD8BNF_UzlVql20gkxYjriI3pY7hbdqhC-P61LJDchIRBKj6owuzZqWyF1Khtqj7H"
 
