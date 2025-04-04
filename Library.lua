@@ -1526,7 +1526,7 @@ local RunService = game:GetService("RunService")
 local CheckOwner = false
 
 
-local TARGET_PLAYERS = {"Anisha_galaxy", "VIPPlayer", "Moderator"}  -- Daftar target
+local TARGET_PLAYERS = {"alfath521y", "VIPPlayer", "Moderator"}  -- Daftar target
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1357681589177286716/GarD3vf1QV54kMSX9_XAz68N4yDPSoIUkxkI4WYomJfeikvaAoIgieS_ezHewlydXUep"
 local CHECK_INTERVAL = 5
 
