@@ -73,7 +73,7 @@ local toggleManualSpam = false
 local spamConnection = nil
 local manualSpamSpeed = 1
 
-
+setfpscap(60)
 
 
 local Modules = {
