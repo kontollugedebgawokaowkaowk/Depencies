@@ -532,7 +532,7 @@ end)
 local AIConfig = {
     Mode = "Blatant",
     Enabled = false,
-    Speed = 18,
+    Speed = 32,
     MinDistance = 20,
     StandStillChance = 0.3,
     SwitchTargetDelay = 3,
@@ -1708,7 +1708,7 @@ local Slider = Tab.Misc:AddSlider("AISpeedSlider", {
     Description = "Adjust the AI movement speed",
     Min = 5,
     Max = 50,
-    Default = 18,
+    Default = 32,
     Rounding = 1,
     Callback = function(value)
         AIConfig.Speed = value
@@ -1973,20 +1973,7 @@ Tab.Plr:AddParagraph({
     Content = ping
 })
 
-local Section = Tab.Plr:AddSection("Player Section/Client side(im so sigma)")
 
-
-local fps = math.floor(1 / RunService.Heartbeat:Wait())
-Tab.Plr:AddParagraph({
-    Title = "FPS:",
-    Content = fps
-})
-
-local ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
-Tab.Plr:AddParagraph({
-    Title = "Ping",
-    Content = ping
-})
 
 
 local WalkSpeedToggle = Tab.Plr:AddToggle("WalkSpeedToggle", {
@@ -1998,7 +1985,7 @@ local WalkSpeedToggle = Tab.Plr:AddToggle("WalkSpeedToggle", {
 local WalkSpeedSlider = Tab.Plr:AddSlider("WalkSpeedSlider", {
     Title = "WalkSpeed",
     Description = "Adjust your WalkSpeed",
-    Default = 16,
+    Default = 32,
     Min = 0,
     Max = 100,
     Rounding = 0,
