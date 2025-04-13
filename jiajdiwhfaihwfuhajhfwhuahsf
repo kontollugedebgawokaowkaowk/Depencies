@@ -68,7 +68,7 @@ local function hookRemote(remote)
                                 
                                 print("✅ Remote copied to clipboard!")
                                 game.StarterGui:SetCore("SendNotification", {
-                                    Title = "FROSTWARE",
+                                    Title = "StarX",
                                     Text = "Remote copied to clipboard!",
                                     Duration = 5,
                                 })
