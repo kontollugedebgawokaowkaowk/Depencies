@@ -756,239 +756,722 @@ end
 
 ManualSpam()
 
-local NothingLibrary = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))();
-local Windows = NothingLibrary.new({
-	Title = "StarX V3",
-	Description = "#1 Blade Ball Script",
-	Keybind = Enum.KeyCode.LeftControl,
-	Logo = 'rbxassetid://87612256650602'
+
+
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeE4X-dev/Library/refs/heads/main/FluentRemake.lua"))();
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))();
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))();
+local Window = Fluent:CreateWindow({
+    Title = "Blade Ball - StarX Hub V3 BETA",
+    SubTitle = "by CodeE4X",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 500),
+    Acrylic = false,
+    Theme = "DarkPurple",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local Main = Windows:NewTab({
-	Title = "Main",
-	Description = "Auto Parry, Auto Spam, etc.",
-	Icon = "rbxassetid://10734975486"
-})
-
-local Abi = Windows:NewTab({
-	Title = "Ability",
-	Description = "Anti Infinity, Anti Hell Hooks, etc.",
-	Icon = "rbxassetid://10734975486"
-})
-
-local Visual = Windows:NewTab({
-	Title = "Visual",
-	Description = "Anti Infinity, Anti Hell Hooks, etc.",
-	Icon = "rbxassetid://10734975486"
-})
-
-local Section = Main:NewSection({
-	Title = "Section",
-	Icon = "rbxassetid://7743869054",
-	Position = "Left"
-})
-
-
-Section:NewToggle({
-    Title = "Auto Parry",
-    Default = false,
-    Callback = function(v)
-        if v then
-            Connections_Manager["Auto Parry"] = RunService.PreSimulation:Connect(function()
-                local One_Ball = Auto_Parry.Get_Ball()
-                local Balls = Auto_Parry.Get_Balls()
-                if (not Balls or (#Balls == 0)) then return end
-
-                for _, Ball in pairs(Balls) do
-                    if not Ball then return end
-
-                    local Zoomies = Ball:FindFirstChild("zoomies")
-                    if not Zoomies then return end
-
-                    Ball:GetAttributeChangedSignal("target"):Once(function()
-                        Parried = false
-                    end)
-
-                    if Parried then return end
-
-                    local Ball_Target = Ball:GetAttribute("target")
-                    local One_Target = One_Ball and One_Ball:GetAttribute("target")
-                    local Velocity = Zoomies.VectorVelocity
-                    local character = LocalPlayer.Character
-                    if (not character or not character.PrimaryPart) then return end
-
-                    local Distance = (character.PrimaryPart.Position - Ball.Position).Magnitude
-                    local Speed = Velocity.Magnitude
-                    local Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() / 10
-                    local Parry_Accuracy = (Speed / 3.25) + Ping
-                    local Curved = Auto_Parry.Is_Curved()
-
-                    if ((Ball_Target == tostring(LocalPlayer)) and Aerodynamic) then
-                        local Elapsed_Tornado = tick() - Aerodynamic_Time
-                        if (Elapsed_Tornado > 0.6) then
-                            Aerodynamic_Time = tick()
-                            Aerodynamic = false
-                        end
-                        return
-                    end
-
-                    if ((One_Target == tostring(LocalPlayer)) and Curved) then return end
-
-                    if ((Ball_Target == tostring(LocalPlayer)) and (Distance <= Parry_Accuracy)) then
-                        Auto_Parry.Parry()
-                        Parried = true
-                    end
-
-                    local Last_Parrys = tick()
-                    while (tick() - Last_Parrys) < 1 do
-                        if not Parried then break end
-                        task.wait()
-                    end
-
-                    Parried = false
-                end
-            end)
-        elseif Connections_Manager["Auto Parry"] then
-            Connections_Manager["Auto Parry"]:Disconnect()
-            Connections_Manager["Auto Parry"] = nil
-        end
-    end,
-})
-
-Section:NewToggle({
-    Title = "Auto Spam",
-    Default = false,
-    Callback = function(v)
-        if not AutoSpam then
-            AutoSpam = { Value = false }
-        end
-
-        AutoSpam.Value = v
-        local autoSpamCoroutine = nil
-        local targetPlayer = nil
-
-        if v then
-            if autoSpamCoroutine then
-                coroutine.resume(autoSpamCoroutine, "stop")
-                autoSpamCoroutine = nil
-            end
-
-            autoSpamCoroutine = coroutine.create(function(signal)
-                while AutoSpam.Value and (signal ~= "stop") do
-                    local ball = Auto_Parry.Get_Ball()
-                    if (not ball or not ball:IsDescendantOf(workspace)) then
-                        task.wait()
-                        continue
-                    end
-
-                    local zoomies = ball:FindFirstChild("zoomies")
-                    if not zoomies then
-                        task.wait()
-                        continue
-                    end
-
-                    Auto_Parry.Closest_Player()
-                    targetPlayer = Closest_Entity
-
-                    if (not targetPlayer or not targetPlayer.PrimaryPart or not targetPlayer:IsDescendantOf(workspace)) then
-                        task.wait()
-                        continue
-                    end
-
-                    local playerDistance = LocalPlayer:DistanceFromCharacter(ball.Position)
-                    local targetPosition = targetPlayer.PrimaryPart.Position
-                    local targetDistance = LocalPlayer:DistanceFromCharacter(targetPosition)
-
-                    if not targetPlayer.Parent then
-                        task.wait()
-                        continue
-                    end
-
-                    if (not ball:IsDescendantOf(workspace) or (ball.Position.Magnitude < 1)) then
-                        local waitTime = 0
-                        repeat
-                            task.wait(0.1)
-                            waitTime += 0.1
-                            ball = Auto_Parry.Get_Ball()
-                        until (ball and ball:IsDescendantOf(workspace) and (ball.Position.Magnitude > 1)) or (waitTime >= 2.5)
-                        continue
-                    end
-
-                    local ballVelocity = ball.Velocity.Magnitude
-                    local ballSpeed = math.max(ballVelocity, 0)
-                    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
-                    local pingThreshold = math.clamp(ping / 10, 10, 16)
-
-                    local ballProperties = Auto_Parry:Get_Ball_Properties()
-                    local entityProperties = Auto_Parry:Get_Entity_Properties()
-                    local spamAccuracy = Auto_Parry.Spam_Service({
-                        Ball_Properties = ballProperties,
-                        Entity_Properties = entityProperties,
-                        Ping = pingThreshold,
-                        Spam_Sensitivity = Auto_Parry.Spam_Sensitivity,
-                        Ping_Based_Spam = Auto_Parry.Ping_Based_Spam
-                    })
-
-                    if (zoomies and (zoomies.Parent == ball) and ((playerDistance <= 30) or (targetDistance <= 30)) and (Parries > 1)) then
-                        Auto_Parry.Parry()
-                    end
-
-                    task.wait()
-                end
-            end)
-
-            coroutine.resume(autoSpamCoroutine)
-        elseif autoSpamCoroutine then
-            coroutine.resume(autoSpamCoroutine, "stop")
-            autoSpamCoroutine = nil
-        end
-    end,
-})
+local Tabs = {
+    Main = Window:AddTab({Title = "Main", Icon = "swords"}),
+    Abi = Window:AddTab({Title = "Ability", Icon = "zap"}),
+    Visual = Window:AddTab({Title = "Visuals", Icon = "eye"}),
+    AI = Window:AddTab({Title = "Ai Play", Icon = "bot"}),
+    Far = Window:AddTab({Title = "Auto Farm", Icon = "leaf"}),
+    Misc = Window:AddTab({Title = "Players", Icon = "box"}),
+}
+Window:SelectTab(1)
 
 
 
-Section:NewToggle({
-    Title = "Manual Spam",
+
+local AutoParry = Tabs.Main:AddToggle("AutoParry", {Title="Auto Parry",Default=true});
+AutoParry:OnChanged(function(v)
+	if v then
+		Connections_Manager["Auto Parry"] = RunService.PreSimulation:Connect(function()
+			local One_Ball = Auto_Parry.Get_Ball();
+			local Balls = Auto_Parry.Get_Balls();
+			if (not Balls or (#Balls == 0)) then
+				return;
+			end
+			for _, Ball in pairs(Balls) do
+				if not Ball then
+					return;
+				end
+				local Zoomies = Ball:FindFirstChild("zoomies");
+				if not Zoomies then
+					return;
+				end
+				Ball:GetAttributeChangedSignal("target"):Once(function()
+					Parried = false;
+				end);
+				if Parried then
+					return;
+				end
+				local Ball_Target = Ball:GetAttribute("target");
+				local One_Target = One_Ball and One_Ball:GetAttribute("target");
+				local Velocity = Zoomies.VectorVelocity;
+				local character = LocalPlayer.Character;
+				if (not character or not character.PrimaryPart) then
+					return;
+				end
+				local Distance = (character.PrimaryPart.Position - Ball.Position).Magnitude;
+				local Speed = Velocity.Magnitude;
+				local Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() / 10;
+				local Parry_Accuracy = (Speed / 3.25) + Ping;
+				local Curved = Auto_Parry.Is_Curved();
+				if ((Ball_Target == tostring(LocalPlayer)) and Aerodynamic) then
+					local Elapsed_Tornado = tick() - Aerodynamic_Time;
+					if (Elapsed_Tornado > 0.6) then
+						Aerodynamic_Time = tick();
+						Aerodynamic = false;
+					end
+					return;
+				end
+				if ((One_Target == tostring(LocalPlayer)) and Curved) then
+					return;
+				end
+				if ((Ball_Target == tostring(LocalPlayer)) and (Distance <= Parry_Accuracy)) then
+					Auto_Parry.Parry();
+					Parried = true;
+				end
+				local Last_Parrys = tick();
+				while (tick() - Last_Parrys) < 1 do
+					if not Parried then
+						break;
+					end
+					task.wait();
+				end
+				Parried = false;
+			end
+		end);
+	elseif Connections_Manager["Auto Parry"] then
+		Connections_Manager["Auto Parry"]:Disconnect();
+		Connections_Manager["Auto Parry"] = nil;
+	end
+end);
+local AutoSpam = Tabs.Main:AddToggle("AutoSpam", {Title="Auto Spam",Default=true});
+local autoSpamCoroutine = nil;
+local targetPlayer = nil;
+AutoSpam:OnChanged(function(v)
+	if v then
+		if autoSpamCoroutine then
+			coroutine.resume(autoSpamCoroutine, "stop");
+			autoSpamCoroutine = nil;
+		end
+		autoSpamCoroutine = coroutine.create(function(signal)
+			while AutoSpam.Value and (signal ~= "stop") do
+				local ball = Auto_Parry.Get_Ball();
+				if (not ball or not ball:IsDescendantOf(workspace)) then
+					task.wait();
+					continue;
+				end
+				local zoomies = ball:FindFirstChild("zoomies");
+				if not zoomies then
+					task.wait();
+					continue;
+				end
+				Auto_Parry.Closest_Player();
+				targetPlayer = Closest_Entity;
+				if (not targetPlayer or not targetPlayer.PrimaryPart or not targetPlayer:IsDescendantOf(workspace)) then
+					task.wait();
+					continue;
+				end
+				local playerDistance = LocalPlayer:DistanceFromCharacter(ball.Position);
+				local targetPosition = targetPlayer.PrimaryPart.Position;
+				local targetDistance = LocalPlayer:DistanceFromCharacter(targetPosition);
+				if not targetPlayer.Parent then
+					task.wait();
+					continue;
+				end
+				if (not ball:IsDescendantOf(workspace) or (ball.Position.Magnitude < 1)) then
+					local waitTime = 0;
+					repeat
+						task.wait(0.1);
+						waitTime += 0.1
+						ball = Auto_Parry.Get_Ball();
+					until (ball and ball:IsDescendantOf(workspace) and (ball.Position.Magnitude > 1)) or (waitTime >= 2.5) 
+					continue;
+				end
+				local ballVelocity = ball.Velocity.Magnitude;
+				local ballSpeed = math.max(ballVelocity, 0);
+				local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue();
+				local pingThreshold = math.clamp(ping / 10, 10, 16);
+				local ballProperties = Auto_Parry:Get_Ball_Properties();
+				local entityProperties = Auto_Parry:Get_Entity_Properties();
+				local spamAccuracy = Auto_Parry.Spam_Service({Ball_Properties=ballProperties,Entity_Properties=entityProperties,Ping=pingThreshold,Spam_Sensitivity=Auto_Parry.Spam_Sensitivity,Ping_Based_Spam=Auto_Parry.Ping_Based_Spam});
+				if (zoomies and (zoomies.Parent == ball) and ((playerDistance <= 30) or (targetDistance <= 30)) and (Parries > 1)) then
+						Auto_Parry.Parry();
+				end
+				task.wait();
+			end
+		end);
+		coroutine.resume(autoSpamCoroutine);
+	elseif autoSpamCoroutine then
+		coroutine.resume(autoSpamCoroutine, "stop");
+		autoSpamCoroutine = nil;
+	end
+end);
+
+local Toggle = Tabs.Main:AddToggle("MyToggle", 
+{
+    Title = "Manual Spam", 
+    Description = "Back up For Auto Spam",
     Default = false,
     Callback = function()
         ManualSpam()
-    end,
+    end 
 })
 
-Section:NewSlider({
+local SpamSensitivitySlider = Tabs.Main:AddSlider("SpamSensitivity", {
     Title = "Spam Sensitivity",
+    Description = "Adjust spam responsiveness",
+    Default = 50,
     Min = 1,
     Max = 100,
-    Default = 50,
+    Rounding = 0,
     Callback = function(Value)
         Auto_Parry.Spam_Sensitivity = Value
-    end,
+    end
 })
 
-Section:NewDropdown({
+
+local DirectionDropdown = Tabs.Main:AddDropdown("DirectionDropdown", {
     Title = "Parry Direction",
-    Data = Parry_Directions,
+    Values = Parry_Directions,
     Default = "Default",
+    Multi = false,
     Callback = function(Value)
         Auto_Parry.Parry_Type = Value
-    end,
+    end
 })
 
-Section:NewDropdown({
+local CurveMethodDropdown = Tabs.Main:AddDropdown("CurveMethod", {
     Title = "Curve Detection Method",
-    Data = {"Default", "Predictive", "Direct"},
+    Values = {"Default", "Predictive", "Direct"},
     Default = "Default",
+    Multi = false,
     Callback = function(Value)
         CurveMethod = Value
-    end,
+    end
 })
 
-Section:NewSlider({
+local PredictiveSlider = Tabs.Main:AddSlider("PredictiveSlider", {
     Title = "Predictive Factor",
+    Description = "Higher values = more aggressive prediction",
+    Default = 50,
     Min = 10,
     Max = 90,
-    Default = 50,
+    Rounding = 0,
     Callback = function(Value)
-        PredictiveFactor = Value / 100
+        PredictiveFactor = Value/100
+    end
+})
+
+
+
+local Section = Tabs.Abi:AddSection("Ability Detection")
+
+
+Tabs.Abi:AddButton({
+    Title = "Anti Slash Of Furry",
+    Description = "Prevents Slash Of Furry",
+    Callback = function()
+        print("Anti Slash Of Furry")
+    end
+})
+
+Tabs.Abi:AddButton({
+    Title = "Anti Freeze",
+    Description = "Prevents Freeze effect",
+    Callback = function()
+        print("Anti Freeze")
+    end
+})
+
+Tabs.Abi:AddButton({
+    Title = "Anti Phantom",
+    Description = "Prevents Phantom attack",
+    Callback = function()
+        print("Anti Phantom")
+    end
+})
+
+Tabs.Abi:AddButton({
+    Title = "Anti Infinity",
+    Description = "Prevents Infinity effects",
+    Callback = function()
+        print("Anti Infinity")
+    end
+})
+
+Tabs.Abi:AddButton({
+    Title = "Anti Hell Hooks",
+    Description = "Prevents Hell Hooks ability",
+    Callback = function()
+        print("Anti Hell Hooks")
+    end
+})
+
+local Section = Tabs.Visual:AddSection("Visual Section")
+
+local originalLightingSettings = {}
+
+local function optimize(state)
+    if state then
+        -- Save original settings
+        local light = game:GetService("Lighting")
+        originalLightingSettings = {
+            GlobalShadows = light.GlobalShadows,
+            FogEnd = light.FogEnd,
+            Brightness = light.Brightness,
+            OutdoorAmbient = light.OutdoorAmbient,
+            EnvironmentDiffuseScale = light.EnvironmentDiffuseScale,
+            EnvironmentSpecularScale = light.EnvironmentSpecularScale,
+            ShadowSoftness = light.ShadowSoftness
+        } 
+        local light = game:GetService("Lighting")
+        light.GlobalShadows = false
+        light.FogEnd = 100000
+        light.Brightness = 1
+        light.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        light.EnvironmentDiffuseScale = 0
+        light.EnvironmentSpecularScale = 0
+        light.ShadowSoftness = 1
+
+        -- Terrain
+        if game.Workspace:FindFirstChildOfClass("Terrain") then
+            local terrain = game.Workspace:FindFirstChildOfClass("Terrain")
+            terrain.WaterWaveSize = 0
+            terrain.WaterWaveSpeed = 0
+            terrain.WaterReflectance = 0
+            terrain.WaterTransparency = 1
+            terrain.Decorations = false
+        end
+
+        -- Remove laggy instances
+        for _, obj in pairs(game:GetDescendants()) do
+            if obj:IsA("Explosion") or
+               obj:IsA("Fire") or
+               obj:IsA("Smoke") or
+               obj:IsA("Sparkles") or
+               obj:IsA("Trail") or
+               obj:IsA("ParticleEmitter") or
+               obj:IsA("Beam") then
+                obj:Destroy()
+            elseif obj:IsA("Texture") or
+                   obj:IsA("Decal") or
+                   obj:IsA("SurfaceAppearance") then
+                obj:Destroy()
+            elseif obj:IsA("BlurEffect") or
+                   obj:IsA("SunRaysEffect") or
+                   obj:IsA("ColorCorrectionEffect") or
+                   obj:IsA("BloomEffect") or
+                   obj:IsA("DepthOfFieldEffect") then
+                obj:Destroy()
+            end
+        end
+
+        -- Disable Emitters (some may respawn)
+        game:GetService("RunService").RenderStepped:Connect(function()
+            for _, v in pairs(game:GetDescendants()) do
+                if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                    v.Enabled = false
+                end
+            end
+        end)
+        local light = game:GetService("Lighting")
+        for setting, value in pairs(originalLightingSettings) do
+            pcall(function()
+                light[setting] = value
+            end)
+        end
+        print("⚠️ Some settings may require game rejoin to fully restore")
+    end
+end
+
+local Toggle = Tabs.Visual:AddToggle("MegaLagReducer", {
+    Title = "Anti-Lag (Massive)",
+    Description = "Disables everything that causes lag. One toggle to clean them all.",
+    Default = false,
+    Callback = function(state)
+        optimize(state)
+    end
+})
+
+
+
+local Section = Tabs.AI:AddSection("AI Play Settings")
+
+-- AI State variables
+local AIPlaying = false
+local AICoroutine = nil
+local AITarget = nil
+local AILastActionTime = 0
+local AICurrentMethod = "LegitNoob"
+
+local LocalPlayer = game:GetService("Players").LocalPlayer
+
+
+-- Utility function to safely get players
+local function getValidPlayers()
+    local players = {}
+    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local primaryPart = player.Character:FindFirstChild("HumanoidRootPart") or player.Character.PrimaryPart
+            if primaryPart and primaryPart.Position then
+                table.insert(players, {
+                    Player = player,
+                    Character = player.Character,
+                    PrimaryPart = primaryPart
+                })
+            end
+        end
+    end
+    return players
+end
+
+-- Utility function to safely get ball
+local function getSafeBall()
+    local success, ball = pcall(function() return Auto_Parry.Get_Ball() end)
+    if success and ball and ball.Parent and ball.Position then
+        return ball
+    end
+    return nil
+end
+
+-- AI Methods
+local AIMethods = {
+    LegitNoob = function(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local primaryPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+        if not humanoid or not primaryPart then return end
+        
+        local actions = {"Walk", "Jump", "Stand"}
+        local action = actions[math.random(1, #actions)]
+        
+        if action == "Walk" then
+            humanoid:MoveTo(primaryPart.Position + Vector3.new(math.random(-10, 10), 0, math.random(-10, 10)))
+        elseif action == "Jump" then
+            humanoid.Jump = true
+        end
     end,
+    
+    LegitPro = function(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local primaryPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+        if not humanoid or not primaryPart then return end
+        
+        if math.random() > 0.5 then
+            local targetPos
+            
+            -- Try to get ball first
+            local ball = getSafeBall()
+            if ball then
+                targetPos = ball.Position
+            else
+                -- Fallback to players
+                local validPlayers = getValidPlayers()
+                if #validPlayers > 0 then
+                    local target = validPlayers[math.random(1, #validPlayers)]
+                    targetPos = target.PrimaryPart.Position
+                end
+            end
+            
+            -- Final fallback to random movement
+            if targetPos then
+                humanoid:MoveTo(targetPos)
+            else
+                humanoid:MoveTo(primaryPart.Position + Vector3.new(math.random(-10, 10), 0, math.random(-10, 10)))
+            end
+        else
+            humanoid.Jump = true
+        end
+    end,
+    
+    LegitEssex = function(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local primaryPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+        if not humanoid or not primaryPart then return end
+        
+        if math.random() > 0.7 then
+            local validPlayers = getValidPlayers()
+            if #validPlayers > 0 then
+                local target = validPlayers[math.random(1, #validPlayers)]
+                local targetPos = target.PrimaryPart.Position - (target.PrimaryPart.CFrame.LookVector * 2)
+                humanoid:MoveTo(targetPos)
+            else
+                AIMethods.LegitPro(character)
+            end
+        else
+            AIMethods.LegitPro(character)
+        end
+    end,
+    
+    BlatantPro = function(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local primaryPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+        if not humanoid or not primaryPart then return end
+        
+        if math.random() > 0.3 then
+            local validPlayers = getValidPlayers()
+            local closestTarget = nil
+            local closestDistance = math.huge
+            
+            for _, target in ipairs(validPlayers) do
+                local distance = (primaryPart.Position - target.PrimaryPart.Position).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestTarget = target
+                end
+            end
+            
+            if closestTarget and closestDistance < 15 then
+                local targetPos = closestTarget.PrimaryPart.Position + 
+                               (closestTarget.PrimaryPart.CFrame.LookVector * 2)
+                humanoid:MoveTo(targetPos)
+            else
+                AIMethods.LegitPro(character)
+            end
+        else
+            AIMethods.LegitPro(character)
+        end
+    end,
+    
+    FollowBall = function(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local primaryPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+        if not humanoid or not primaryPart then return end
+        
+        local ball = getSafeBall()
+        if ball then
+            local direction = (ball.Position - primaryPart.Position).Unit
+            local targetPos = ball.Position - (direction * 20)
+            humanoid:MoveTo(targetPos)
+        else
+            AIMethods.LegitPro(character)
+        end
+    end
+}
+
+-- AI Main Loop with robust error handling
+local function runAI()
+    while AIPlaying do
+        local character = LocalPlayer.Character
+        if character then
+            local success, err = pcall(function()
+                if AIMethods[AICurrentMethod] then
+                    AIMethods[AICurrentMethod](character)
+                end
+            end)
+            
+            if not success then
+                warn("AI Error in", AICurrentMethod, ":", err)
+                -- Fallback to basic method if error occurs
+                AICurrentMethod = "LegitNoob"
+            end
+        end
+        
+        -- Random delay with min-max range
+        task.wait(math.random(5, 15) / 10)
+    end
+end
+
+-- AI Toggle
+local AIToggle = Tabs.AI:AddToggle("AIToggle", {
+    Title = "Enable AI Play",
+    Default = false,
+    Callback = function(state)
+        AIPlaying = state
+        
+        if AIPlaying then
+            if AICoroutine then
+                coroutine.resume(AICoroutine, "stop")
+            end
+            AICoroutine = coroutine.create(runAI)
+            coroutine.resume(AICoroutine)
+        elseif AICoroutine then
+            coroutine.resume(AICoroutine, "stop")
+            AICoroutine = nil
+        end
+    end
+})
+
+-- AI Method Dropdown
+local AIMethodDropdown = Tabs.AI:AddDropdown("AIMethod", {
+    Title = "AI Behavior",
+    Values = {"LegitNoob", "LegitPro", "LegitEssex", "BlatantPro", "FollowBall"},
+    Default = "LegitNoob",
+    Multi = false,
+    Callback = function(Value)
+        AICurrentMethod = Value
+    end
+})
+
+-- AI Aggressiveness Slider
+
+
+-- AI Movement Speed Slider
+local AIMovementSpeed = Tabs.AI:AddSlider("AIMovementSpeed", {
+    Title = "Movement Speed",
+    Description = "How fast the AI moves",
+    Default = 32,
+    Min = 10,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = Value
+            end
+        end
+    end
+})
+
+
+
+local Section = Tabs.Far:AddSection("Farm Settings")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Direct Variables
+local AutoFarm = false
+local AutoFarmType = "UnderBall"
+local AutoFarmOrbit = 5
+local AutoFarmHeight = 10
+local AutoFarmRadius = 10
+local AutoFarmConnection = nil
+
+-- Ball Functions
+local function get_ball()
+    local balls = workspace:FindFirstChild("Balls")
+    if not balls then return nil end
+    
+    for _, ball in pairs(balls:GetChildren()) do
+        if ball:GetAttribute('realBall') then
+            return ball
+        end
+    end
+    return nil
+end
+
+local function get_humanoid_root_part(player)
+    if not player then return nil end
+    local character = player.Character
+    if not character then return nil end
+    return character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+end
+
+-- Auto Farm Logic
+local function autofarm()
+    local player = Players.LocalPlayer
+    local ball = get_ball()
+    local rootPart = get_humanoid_root_part(player)
+    
+    if not ball or not rootPart then return end
+    
+    local position = ball.Position
+    
+    if AutoFarmType == "UnderBall" then
+        rootPart.CFrame = CFrame.new(position - Vector3.new(0, AutoFarmHeight, 0))
+    elseif AutoFarmType == "X Orbit" then
+        local angle = tick() * math.pi * 2 / (AutoFarmOrbit / 5)
+        rootPart.CFrame = CFrame.new(position + Vector3.new(
+            math.cos(angle) * AutoFarmRadius, 
+            0, 
+            math.sin(angle) * AutoFarmRadius
+        ))
+    elseif AutoFarmType == "Y Orbit" then
+        local angle = tick() * math.pi * 2 / (AutoFarmOrbit / 5)
+        rootPart.CFrame = CFrame.new(position + Vector3.new(
+            0, 
+            math.sin(angle) * AutoFarmRadius, 
+            math.cos(angle) * AutoFarmRadius
+        ))
+    end
+end
+
+-- Main Farm Loop
+local function startAutoFarm()
+    if AutoFarmConnection then
+        AutoFarmConnection:Disconnect()
+        AutoFarmConnection = nil
+    end
+    
+    AutoFarmConnection = RunService.Heartbeat:Connect(function()
+        if AutoFarm then
+            local success, err = pcall(autofarm)
+            if not success then
+                warn("AutoFarm Error:", err)
+            end
+        end
+    end)
+end
+
+Tabs.Far:AddToggle("AutoFarmToggle", {
+    Title = "Auto Farm",
+    Description = "Automatically farms balls and slaps the ball (requires Auto Parry)",
+    Default = AutoFarm,
+    Callback = function(state)
+        AutoFarm = state
+        if AutoFarm then
+            startAutoFarm()
+        elseif AutoFarmConnection then
+            AutoFarmConnection:Disconnect()
+            AutoFarmConnection = nil
+        end
+    end
+})
+
+Tabs.Far:AddDropdown("AutoFarmMode", {
+    Title = "Farming Mode",
+    Description = "Select farming Mode",
+    Values = {"UnderBall", "X Orbit", "Y Orbit"},
+    Default = AutoFarmType,
+    Callback = function(value)
+        AutoFarmType = value
+    end
+})
+
+Tabs.Far:AddSlider("OrbitSpeedSlider", {
+    Title = "Orbit Speed",
+    Description = "Adjust orbit rotation speed",
+    Default = AutoFarmOrbit,
+    Min = 1,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(value)
+        AutoFarmOrbit = value
+    end
+})
+
+Tabs.Far:AddSlider("HeightSlider", {
+    Title = "UnderBall Height",
+    Description = "Adjust height below ball",
+    Default = AutoFarmHeight,
+    Min = 5,
+    Max = 30,
+    Rounding = 1,
+    Callback = function(value)
+        AutoFarmHeight = value
+    end
+})
+
+Tabs.Far:AddSlider("RadiusSlider", {
+    Title = "Orbit Radius",
+    Description = "Adjust distance from ball",
+    Default = AutoFarmRadius,
+    Min = 5,
+    Max = 30,
+    Rounding = 1,
+    Callback = function(value)
+        AutoFarmRadius = value
+    end
 })
