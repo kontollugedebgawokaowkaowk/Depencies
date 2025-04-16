@@ -1,6 +1,18 @@
 repeat
 	task.wait();
 until game:IsLoaded() 
+local blacklist = {
+    [5680264543] = true, -- Ganti dengan UserId yang ingin diblacklist
+    [87654321] = true,
+    [11223344] = true,
+}
+
+game.Players.PlayerAdded:Connect(function(player)
+    if blacklist[player.UserId] then
+        player:Kick("Your getting Ban By StarX Scripts, You Dont Do Anything? Join Our Discord And Contact Mods Or Owner! https://discord.gg/b7yA7uTfmp")
+    end
+end)
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
