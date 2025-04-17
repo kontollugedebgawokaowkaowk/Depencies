@@ -1001,7 +1001,7 @@ local SpamSensitivitySlider = Tabs.Main:AddSlider("SpamSensitivity", {
 Auto_Parry.Parry_Type = "Default"
 
 
-local Dropdown = Tab.Main:AddDropdown("Dropdown", {
+local Dropdown = Tabs.Main:AddDropdown("Dropdown", {
     Title = "Parry Direction/Curve ",
     Description = "Select the direction for automatic parrying",
     Values = {"Random", "Backwards", "Straight", "Up", "Right", "Left"},
