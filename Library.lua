@@ -945,7 +945,7 @@ AutoSpam:OnChanged(function(v)
 					continue;
 				end
 				Auto_Parry.Closest_Player();
-				targetPlayer = Auto_Parry.Select_Target();
+				targetPlayer = Closest_Entity;
 				if (not targetPlayer or not targetPlayer.PrimaryPart or not targetPlayer:IsDescendantOf(workspace)) then
 					task.wait();
 					continue;
