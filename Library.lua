@@ -545,22 +545,18 @@ RunService.RenderStepped:Connect(function()
     end
 end);
 
-
 function ManualSpam()
-
     if MauaulSpam then
         MauaulSpam:Destroy()
         MauaulSpam = nil
         return
     end
 
-
     MauaulSpam = Instance.new("ScreenGui")
     MauaulSpam.Name = "MauaulSpam"
     MauaulSpam.Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     MauaulSpam.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     MauaulSpam.ResetOnSpawn = false
-
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
@@ -573,7 +569,6 @@ function ManualSpam()
 
     local UICorner = Instance.new("UICorner")
     UICorner.Parent = Main
-
 
     local IndercantorBlahblah = Instance.new("Frame")
     IndercantorBlahblah.Name = "IndercantorBlahblah"
@@ -590,7 +585,6 @@ function ManualSpam()
 
     local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
     UIAspectRatioConstraint.Parent = IndercantorBlahblah
-
 
     local PC = Instance.new("TextLabel")
     PC.Name = "PC"
@@ -615,7 +609,6 @@ function ManualSpam()
     local UIAspectRatioConstraint_2 = Instance.new("UIAspectRatioConstraint")
     UIAspectRatioConstraint_2.Parent = PC
     UIAspectRatioConstraint_2.AspectRatio = 4.346
-
 
     local IndercanotTextBlah = Instance.new("TextButton")
     IndercanotTextBlah.Name = "IndercanotTextBlah"
@@ -655,7 +648,6 @@ function ManualSpam()
     UIAspectRatioConstraint_4.Parent = Main
     UIAspectRatioConstraint_4.AspectRatio = 1.667
 
-
     local spamConnection
     local toggleManualSpam = false
     local manualSpamSpeed = 15
@@ -687,7 +679,6 @@ function ManualSpam()
             end)
         end
     end
-
 
     local button = IndercanotTextBlah
     local UIGredient = button.UIGradient
@@ -758,7 +749,6 @@ function ManualSpam()
 
     button.MouseButton1Click:Connect(toggleColor)
 
-
     local keyConnection
     keyConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
@@ -766,7 +756,6 @@ function ManualSpam()
             toggleColor()
         end
     end)
-
 
     MauaulSpam.Destroying:Connect(function()
         if keyConnection then
@@ -776,7 +765,6 @@ function ManualSpam()
             spamConnection:Disconnect()
         end
     end)
-
 
     local gui = Main
     local dragging
@@ -829,6 +817,7 @@ function ManualSpam()
 end
 
 ManualSpam()
+
 
 
 
@@ -989,7 +978,7 @@ end);
 local Toggle = Tabs.Main:AddToggle("MyToggle",
 {
     Title = "Manual Spam",
-    Description = "Back up For Auto Spam",
+    Description = "Backup For Auto Spam",
     Default = false,
     Callback = function()
         ManualSpam()
@@ -1009,13 +998,17 @@ local SpamSensitivitySlider = Tabs.Main:AddSlider("SpamSensitivity", {
 })
 
 
-local DirectionDropdown = Tabs.Main:AddDropdown("DirectionDropdown", {
-    Title = "Parry Direction",
-    Values = Parry_Directions,
-    Default = "Default",
+Auto_Parry.Parry_Type = "Default"
+
+
+local Dropdown = Tab.Main:AddDropdown("Dropdown", {
+    Title = "Parry Direction/Curve ",
+    Description = "Select the direction for automatic parrying",
+    Values = {"Random", "Backwards", "Straight", "Up", "Right", "Left"},
     Multi = false,
-    Callback = function(Value)
-        Auto_Parry.Parry_Type = Value
+    Default = 3,
+    Callback = function(selected)
+        Auto_Parry.Parry_Type = selected
     end
 })
 
