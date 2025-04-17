@@ -235,7 +235,7 @@ Auto_Parry.Parry = function()
         FirstParryDone = true
     else
         for remote, originalArgs in pairs(revertedRemotes) do
-            -- Membuat salinan args dan memodifikasi CFrame (argumen ke-4)
+            
             local modifiedArgs = {
                 originalArgs[1],  -- Argumen 1 (int)
                 originalArgs[2],  -- Argumen 2 (string)
@@ -969,6 +969,280 @@ local PredictiveSlider = Tabs.Main:AddSlider("PredictiveSlider", {
 
 
 
+local Section = Tabs.Visual:AddSection("Just Visual vro")
+
+
+local Toggle = Tabs.Visual:AddToggle("MyToggle", 
+{
+    Title = "Visualizer", 
+    Description = "",
+    Default = false
+    Callback = function(state)
+        visualizerEnabled = state
+    end 
+})
+
+
+
+local Section = Tabs.Visual:AddSection("Ball Visuals")
+
+-- Variables for ball tracking
+local LookToBall = false
+local SpectateBall = false
+local BallTrails = false
+local BallVelocity = false
+local trailPart = nil
+local velocityText = nil
+local ballTrackingConnections = {}
+
+-- Function to create a trail effect
+local function createBallTrail(ball)
+    if not BallTrails or not ball then return end
+    
+    if trailPart then
+        trailPart:Destroy()
+        trailPart = nil
+    end
+    
+    trailPart = Instance.new("Part")
+    trailPart.Shape = Enum.PartType.Ball
+    trailPart.Size = Vector3.new(2, 2, 2)
+    trailPart.Transparency = 0.7
+    trailPart.Anchored = true
+    trailPart.CanCollide = false
+    trailPart.Color = Color3.fromRGB(255, 255, 255)
+    trailPart.Material = Enum.Material.Neon
+    
+    local attachment = Instance.new("Attachment", ball)
+    trailPart.Parent = workspace
+    
+    -- Gradient effect
+    spawn(function()
+        while BallTrails and ball and ball.Parent do
+            trailPart.CFrame = ball.CFrame
+            for i = 1, 10 do
+                if not BallTrails or not ball or not ball.Parent then break end
+                trailPart.Transparency = 0.3 + (i * 0.07)
+                trailPart.Size = Vector3.new(2 + i, 2 + i, 2 + i)
+                task.wait(0.05)
+            end
+            task.wait()
+        end
+        if trailPart then
+            trailPart:Destroy()
+            trailPart = nil
+        end
+    end)
+end
+
+-- Function to show ball velocity
+local function showBallVelocity(ball)
+    if not BallVelocity or not ball then return end
+    
+    if velocityText then
+        velocityText:Destroy()
+        velocityText = nil
+    end
+    
+    velocityText = Instance.new("BillboardGui")
+    velocityText.Name = "BallVelocityDisplay"
+    velocityText.Adornee = ball
+    velocityText.Size = UDim2.new(4, 0, 1.5, 0)
+    velocityText.StudsOffset = Vector3.new(0, 3, 0)
+    velocityText.AlwaysOnTop = true
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SciFi
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel.Parent = velocityText
+    
+    velocityText.Parent = ball
+    
+    -- Update velocity text
+    spawn(function()
+        while BallVelocity and ball and ball.Parent do
+            local speed = ball.AssemblyLinearVelocity.Magnitude
+            local speedKmh = math.floor(speed * 0.036) -- Convert to km/h approximation
+            
+            -- Color coding based on speed
+            local color = Color3.fromRGB(255, 255, 255) -- White
+            if speedKmh > 150 then
+                color = Color3.fromRGB(255, 0, 0) -- Red
+            elseif speedKmh > 100 then
+                color = Color3.fromRGB(255, 165, 0) -- Orange
+            elseif speedKmh > 50 then
+                color = Color3.fromRGB(255, 255, 0) -- Yellow
+            end
+            
+            textLabel.Text = string.format("%d km/h", speedKmh)
+            textLabel.TextColor3 = color
+            task.wait(0.1)
+        end
+        if velocityText then
+            velocityText:Destroy()
+            velocityText = nil
+        end
+    end)
+end
+
+-- Function to track ball and update features
+local function trackBall()
+    -- Clear existing connections
+    for _, conn in pairs(ballTrackingConnections) do
+        conn:Disconnect()
+    end
+    ballTrackingConnections = {}
+    
+    -- Use the existing Auto_Parry function to get the ball
+    local ball = Auto_Parry.Get_Ball()
+    if not ball then return end
+    
+    -- Create trail if enabled
+    if BallTrails then
+        createBallTrail(ball)
+    end
+    
+    -- Show velocity if enabled
+    if BallVelocity then
+        showBallVelocity(ball)
+    end
+    
+    -- Look at ball if enabled
+    if LookToBall then
+        ballTrackingConnections.lookConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            local camera = workspace.CurrentCamera
+            if camera and camera:IsA("Camera") then
+                camera.CFrame = CFrame.new(camera.CFrame.Position, ball.Position)
+            end
+        end)
+    end
+    
+    -- Spectate ball if enabled
+    if SpectateBall then
+        ballTrackingConnections.spectateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            local camera = workspace.CurrentCamera
+            if camera and camera:IsA("Camera") then
+                local offset = CFrame.new(0, 0, 10)
+                camera.CFrame = ball.CFrame * offset
+                camera.Focus = ball.CFrame.p
+            end
+        end)
+    end
+    
+    -- Detect when ball changes
+    ballTrackingConnections.ballChanged = ball:GetPropertyChangedSignal("Parent"):Connect(function()
+        if not ball.Parent then
+            for _, conn in pairs(ballTrackingConnections) do
+                conn:Disconnect()
+            end
+            ballTrackingConnections = {}
+            if trailPart then trailPart:Destroy() end
+            if velocityText then velocityText:Destroy() end
+            -- Wait for new ball
+            task.wait(1)
+            trackBall()
+        end
+    end)
+end
+
+-- Add ball detection connection
+ballTrackingConnections.ballAdded = workspace:WaitForChild("Balls").ChildAdded:Connect(function()
+    task.wait(0.5) -- Wait a bit for the ball to initialize
+    if LookToBall or SpectateBall or BallTrails or BallVelocity then
+        trackBall()
+    end
+end)
+
+-- Add toggles for each feature
+Tabs.Visual:AddToggle("LookToBallToggle", {
+    Title = "Look To Ball",
+    Description = "Camera always looks at the ball",
+    Default = LookToBall,
+    Callback = function(state)
+        LookToBall = state
+        if LookToBall then
+            SpectateBall = false
+            Toggles.SpectateBallToggle:SetValue(false)
+            trackBall()
+        else
+            if ballTrackingConnections.lookConnection then
+                ballTrackingConnections.lookConnection:Disconnect()
+                ballTrackingConnections.lookConnection = nil
+            end
+        end
+    end
+})
+
+Tabs.Visual:AddToggle("SpectateBallToggle", {
+    Title = "Spectate Ball",
+    Description = "Camera follows the ball in 3rd person",
+    Default = SpectateBall,
+    Callback = function(state)
+        SpectateBall = state
+        if SpectateBall then
+            LookToBall = false
+            Toggles.LookToBallToggle:SetValue(false)
+            trackBall()
+        else
+            if ballTrackingConnections.spectateConnection then
+                ballTrackingConnections.spectateConnection:Disconnect()
+                ballTrackingConnections.spectateConnection = nil
+            end
+        end
+    end
+})
+
+Tabs.Visual:AddToggle("BallTrailsToggle", {
+    Title = "Ball Trails",
+    Description = "Adds a white-black faded trail to the ball",
+    Default = BallTrails,
+    Callback = function(state)
+        BallTrails = state
+        if BallTrails then
+            trackBall()
+        else
+            if trailPart then
+                trailPart:Destroy()
+                trailPart = nil
+            end
+        end
+    end
+})
+
+Tabs.Visual:AddToggle("BallVelocityToggle", {
+    Title = "Ball Velocity",
+    Description = "Shows ball speed in km/h with color coding",
+    Default = BallVelocity,
+    Callback = function(state)
+        BallVelocity = state
+        if BallVelocity then
+            trackBall()
+        else
+            if velocityText then
+                velocityText:Destroy()
+                velocityText = nil
+            end
+        end
+    end
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
 local Section = Tabs.Abi:AddSection("Ability Detection")
 
 
@@ -1009,6 +1283,14 @@ Tabs.Abi:AddButton({
     Description = "Prevents Hell Hooks ability",
     Callback = function()
         print("Anti Hell Hooks")
+    end
+})
+
+Tabs.Abi:AddButton({
+    Title = "Auto Ability Got Changed and im lazy to work it again",
+    Description = "wait soon",
+    Callback = function()
+        print("woah al is so sigma")
     end
 })
 
@@ -1475,3 +1757,6 @@ Tabs.Far:AddSlider("RadiusSlider", {
         AutoFarmRadius = value
     end
 })
+
+
+
